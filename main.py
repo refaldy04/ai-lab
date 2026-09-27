@@ -2,7 +2,11 @@ import os
 
 os.environ["HF_HUB_OFFLINE"] = "1"
 
+from fastapi import FastAPI
+from pydantic import BaseModel
 from transformers import pipeline, GenerationConfig
+
+app = FastAPI()
 
 generator = pipeline(
     "text-generation",
@@ -13,17 +17,16 @@ generation_config = GenerationConfig(
     max_new_tokens=200
 )
 
-while True:
-    prompt = input("You > ")
+class ChatRequest(BaseModel):
+    message: str
 
-    if prompt.lower() == "exit":
-        break
-
+@app.post("/chat")
+def chat(request: ChatRequest):
 
     messages = [
         {
             "role": "user",
-            "content": prompt
+            "content": request.message
         }
     ]
 
@@ -33,6 +36,8 @@ while True:
         clean_up_tokenization_spaces=False
     )
 
-    response = result[0]["generated_text"][-1]["content"]
+    response = result[0]["generated_text"]
 
-    print("AI >", response)
+    return {
+        "response": response
+    }
