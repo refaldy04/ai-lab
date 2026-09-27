@@ -1,32 +1,24 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import os
 
-MODEL = "HuggingFaceTB/SmolLM2-360M-Instruct"
+os.environ["HF_HUB_OFFLINE"] = "1"
 
-tokenizer = AutoTokenizer.from_pretrained(
-    MODEL,
-    local_files_only=True,
-)
+from transformers import pipeline
 
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL,
-    local_files_only=True,
+generator = pipeline(
+    "text-generation",
+    model="HuggingFaceTB/SmolLM2-360M-Instruct"
 )
 
 messages = [
-    {"role": "user", "content": "Explain what a neural network is."}
+    {
+        "role": "user",
+        "content": "Explain what TCP is in one sentence."
+    }
 ]
 
-inputs = tokenizer.apply_chat_template(
+result = generator(
     messages,
-    tokenize=True,
-    add_generation_prompt=True,
-    return_tensors="pt",
-    return_dict=True,
+    max_new_tokens=100
 )
 
-outputs = model.generate(
-    **inputs,
-    max_new_tokens=100,
-)
-
-print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+print(result[0]["generated_text"])
